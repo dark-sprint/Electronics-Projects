@@ -1,0 +1,29 @@
+git clone https://github.com/ggerganov/llama.cpp
+
+cd /isaac/llama.cpp
+
+curl -L https://huggingface.co/cg123/tiny-llama-gguf/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf \
+-o /isaac/llama.cpp/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+
+
+apt update && apt install -y libcurl4-openssl-dev build-essential cmake git
+
+cd /isaac/llama.cpp/build
+cmake .. 
+make -j$(nproc)
+
+./main -m ../models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf --interactive
+
+-
+echo "alias chatia='cd ~/llama.cpp && ./main -m models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf --interactive'" >> ~/.bashrc
+source ~/.bashrc
+-
+
+
+
+
+
+
+
+# desde llama.cpp raíz
+./main -m models/tinyllama.gguf -p "¿Qué es Linux?" --color
