@@ -1,0 +1,69 @@
+#include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
+
+// Reemplaza con tus credenciales de Wi-Fi
+const char* ssid = "TU_SSID";
+const char* password = "TU_PASSWORD";
+
+// Crear un servidor en el puerto 80
+ESP8266WebServer server(80);
+
+// Función para manejar la raíz del servidor
+void handleRoot() {
+  String html = "<html><body><h1>Chatbot</h1>";
+  html += "<form action=\"/ask\" method=\"POST\">";
+  html += "Pregunta: <input type=\"text\" name=\"question\">";
+  html += "<input type=\"submit\" value=\"Enviar\">";
+  html += "</form>";
+  html += "</body></html>";
+  server.send(200, "text/html", html);
+}
+
+// Función para manejar las preguntas
+void handleAsk() {
+  String question = server.arg("question");
+  String answer = getResponse(question);
+  
+  String html = "<html><body><h1>Chatbot</h1>";
+  html += "<p><strong>Tú:</strong> " + question + "</p>";
+  html += "<p><strong>Chatbot:</strong> " + answer + "</p>";
+  html += "<a href=\"/\">Volver</a>";
+  html += "</body></html>";
+  server.send(200, "text/html", html);
+}
+
+// Función para obtener respuestas del chatbot
+String getResponse(String question) {
+  if (question == "¿Cómo reinicio mi computadora?") {
+    return "Puedes reiniciar tu computadora presionando el botón de reinicio o seleccionando 'Reiniciar' en el menú de inicio.";
+  } else if (question == "¿Qué hago si mi computadora no enciende?") {
+    return "Verifica que esté conectada a la corriente y que el cable de alimentación esté en buen estado.";
+  } else if (question == "¿Cómo instalo un programa?") {
+    return "Descarga el instalador del programa y sigue las instrucciones en pantalla.";
+  } else {
+    return "Lo siento, no tengo una respuesta para eso.";
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.begin(ssid, password);
+  Serial.print("Conectando a WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("Conectado a WiFi");
+
+  // Definir las rutas del servidor
+  server.on("/", handleRoot);
+  server.on("/ask", HTTP_POST, handleAsk);
+
+  // Iniciar el servidor
+  server.begin();
+  Serial.println("Servidor iniciado");
+}
+
+void loop() {
+  server.handleClient();
+}

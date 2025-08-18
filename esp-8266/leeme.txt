@@ -1,0 +1,127 @@
+========[Configuración inicial]===========================
+
+# descargar software
+https://www.arduino.cc/en/software
+
+# configuración inicial
+File > Preferences > Setting:
+Additional boards manager URLs: https://arduino.esp8266.com/stable/package_esp8266com_index.json
+
+# cambiar velocidad
+Tools > Upload speed > 115200
+
+# asociar el modelo de la esp
+Sketch > Include library > Manager library
+	> Boards Manager: esp8266 > Install
+
+# identificar placa
+LOLIN(WEMOS) D1 R2 & mini : COM-X
+
+# verificar la configuración anterior con un blink de ejemplo
+Archivo > Ejemplos > Basics > Blink  
+
+	# si con la nueva versión del IDE falla, es necesario instalar el driver CH340
+	# referencia : https://sparks.gogo.co.nz/ch340.html
+	
+
+
+========[Jumpers de conexión]=============================
+        
+[USB]: DTR # este jumper se queda sin conectar porque no tiene botón BOOT 
+[USB]: 3V3 # este jumper se queda sin conectar porque no tiene conexión de 3v   
+        		
+			[Adaptador USB]                   		  [ESP32]
+  +----------------------------------------------------------------------------+
+  |    RXD  ────────────────▶  TX    |    		📌 TX transmite datos  |
+  |    TXD  ────────────────▶  RX    |    		📌 RX recibe datos     |
+  |    +5V  ────────────────▶  5V    |    		📌 Alimentación 5V     |
+  |    GND  ────────────────▶  GND   |    		📌 Masa (GND)          |
+  +----------------------------------------------------------------------------+
+
+# para acceder al modo programación hay que hacer un puente en la placa
+# para cualquier otro modo hay que quitar el puente
+										
+		┌────────────[Puente]───────────┐
+		│                               ▼
+	[ GPIO0 (100) ] ────────────────▶  GND	📌 Modo programación 
+												
+
+## driver CP2102 para reconocimiento de USB:
+https://www.silabs.com/developer-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads
+
+	# si da el siguiente error && tengo conectado el puente anteriormente mencionado:
+	A fatal esptool.py error occurred: Cannot configure port, something went wrong. Original message: PermissionError(13, 'A device attached to the system is not functioning.', None, 31)esptool.py v3.0
+	# descargar el siguiente driver
+	https://www.arduined.eu/tag/ch340g/
+
+
+========[Librerías utilizadas]============================= 
+# Descargar librería desde el IDE Arduino 
+
+	+------------------------------------------------------------------------------------------------+	
+	| Descarga | Librería            | Descripción                                                   |
+	|----------|---------------------|---------------------------------------------------------------|
+	| Sí       | AsyncTCP            | Para conexiones TCP asíncronas.                               |	
+	| Sí       | ESPAsyncTCP         | Facilita la creación de servidores y clientes TCP asíncronos. |
+	| Sí       | ESPAsyncWebServer   | Crea servidores web asíncronos.                               |
+	| No       | LittleFS            | Sistema de archios.                                           |
+	| No       | Ticker              | Forma sencilla de ejecutar funciones periódicamente		 |
+	| No       | ConfigManager.hpp   | Maneja configuraciones persistentes almacenadas en la memoria |
+	| No       | WiFi.hpp            | Conexión de WiFi 						 |
+	| No       | SipClass.hpp        | Suscribe al estado de una extensión 				 |
+	| No       | WebServer.hpp       | Implementa un servidor web asíncrono 			 |
+	| No       | AhtClass.hpp        | Interactúa con sensores de temperatura y humedad AHT10/AHT20  |
+	| No       | BlinkerLed.hpp      | Controla el parpadeo de un LED para estados			 |
+	+------------------------------------------------------------------------------------------------+
+
+
+
+========[Configuración littlefs]===========================
+
+# referencia : https://randomnerdtutorials.com/arduino-ide-2-install-esp8266-littlefs/
+
+# busco la ruta de destino en mi pc
+Archivo > Abrir > (ruta)
+
+# descargar el archivo "arduino-littlefs-upload-1.5.3.vsix" y guardarlo en: C:\Users\<_USUARIO>\.arduinoIDE\plugins\arduino-littlefs-upload-1.5.3.vsix
+# en el caso de que no exista la carpeta de /plugins habrá que crearla
+https://github.com/earlephilhower/arduino-littlefs-upload/releases
+
+# reinicio el esp8266 y el IDE
+# 📌 En el caso de que "Serial Monitor" esté activado no nos va a permitir realizar la actualización.
+mantener pulsado el botón de la placa mientras se conecta el USB y mantener pulsado durante 7 segundos
+pulsar F1 "Upload LittleFS to Pico/ESP8266/ESP32"	
+
+
+
+========[Estructura de proyecto]===========================
+CallMonitor-2.6.ino - [setup y loop]: Este es el archivo principal del proyecto
+AhtClass.hpp 		- [header files]: Interactua con los sensores de temperatura y humedad
+BlinkerLed.hpp		- [header files]: Hace parpadear un LED
+ConfigManager.hpp	- [header files]: Controla el sistema de LittleFS
+SipClass.hpp		- [header files]: Permite conectarse a un servidor SIP (Asterisk) y se suscribe al estado de una extensión
+WebServer.hpp		- [header files]: Servidor web asíncrono
+WIFI.hpp			- [header files]: Gestiona la conexión a redes WiFi
+SnmpServer.hpp		- [header files]: Servidor SNMP
+/data				- Se utiliza para almacenar los archivos que se pueden servir a través del servidor web
+
+
+
+========[Esquema de coneción]===============================
+
+	+----------------+ 									+-------------------------------+ 
+	|       IN       |									|     	 RELE  	 	   	|
+	+----------------+ 									+-------------------------------+
+		|	|							 		NO		COM		NC
+		|	|									|		| 		|
+		|	|	                    +----------+ 			    	|	    	|
+		+-------|---------------------------| BOMBILLA |--------------------------------+		|
+		|	|		            +----------+ 						|
+		|	|											|
+		|	+---------------------------------------------------------------------------------------+					
+		|	|
+		N	F	
+	+-------------+												# COM	- Punto común  
+	|  corriente  |												# NO	- Normalmente abierto
+	+-------------+												# NC	- Normamente cerrado
+	

@@ -1,0 +1,17 @@
+producto interesante: RTL-SDR PI 4
+NRF24L01  - (opera en 2.4 GHz)
+RTL-SDR: Para la recepción de señales en 2.4 GHz y 5.8 GHz.
+Raspberry Pi (opcional): Si decides usar un RTL-SDR, puede ser más fácil procesar las señales en una Raspberry Pi.
+
+
+- 2.4 GHz: Esta es una de las bandas más utilizadas para el control de drones y la transmisión de datos. Es popular debido a su capacidad para penetrar obstáculos y su amplio rango.
+- 5.8 GHz: Esta banda se utiliza a menudo para la transmisión de video en tiempo real. Ofrece menos interferencia y mayor calidad de imagen, pero tiene un rango más corto en comparación con 2.4 GHz.
+- 900 MHz: Algunos drones, especialmente aquellos diseñados para aplicaciones de largo alcance, pueden operar en esta frecuencia. Es menos común, pero puede ser útil en ciertas situaciones.
+Frecuencias específicas de fabricantes: Algunos drones pueden utilizar frecuencias específicas o protocolos propietarios que no se encuentran en las bandas comunes.
+
+
+
+------------
+
+HackRF:
+https://es.aliexpress.com/item/1005008134962036.html?src=bing&aff_short_key=UneMJZVf&aff_platform=true&isdl=y&albch=shopping&acnt=135095331&isdl=y&albcp=555356623&albag=1307320540529691&slnk=&trgt=pla-4585307093944349&plac=&crea=81707592810642&netw=s&device=c&mtctp=e&msclkid=5a499bf64dcc19c1e2d1f3effb72e4a8&gatewayAdapt=glo2esp

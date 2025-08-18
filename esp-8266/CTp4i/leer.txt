@@ -1,0 +1,6 @@
+sirve para mandar un mensaje cada día a la hora que configure, ejemplo: 00:17
+const int targetHour = 0;      
+const int targetMinute = 17;
+
+a los correos destinados en RECIPIENT_EMAIL
+va a ir enviandolos mensajes guardados en task.json de la esp8266
