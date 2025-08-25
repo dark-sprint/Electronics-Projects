@@ -65,13 +65,13 @@ https://www.silabs.com/developer-tools/usb-to-uart-bridge-vcp-drivers?tab=downlo
 	| Sí       | ESPAsyncTCP         | Facilita la creación de servidores y clientes TCP asíncronos. |
 	| Sí       | ESPAsyncWebServer   | Crea servidores web asíncronos.                               |
 	| No       | LittleFS            | Sistema de archios.                                           |
-	| No       | Ticker              | Forma sencilla de ejecutar funciones periódicamente		 |
+	| No       | Ticker              | Forma sencilla de ejecutar funciones periódicamente		 	 |
 	| No       | ConfigManager.hpp   | Maneja configuraciones persistentes almacenadas en la memoria |
-	| No       | WiFi.hpp            | Conexión de WiFi 						 |
-	| No       | SipClass.hpp        | Suscribe al estado de una extensión 				 |
-	| No       | WebServer.hpp       | Implementa un servidor web asíncrono 			 |
+	| No       | WiFi.hpp            | Conexión de WiFi 											 |
+	| No       | SipClass.hpp        | Suscribe al estado de una extensión 							 |
+	| No       | WebServer.hpp       | Implementa un servidor web asíncrono 			 			 |
 	| No       | AhtClass.hpp        | Interactúa con sensores de temperatura y humedad AHT10/AHT20  |
-	| No       | BlinkerLed.hpp      | Controla el parpadeo de un LED para estados			 |
+	| No       | BlinkerLed.hpp      | Controla el parpadeo de un LED para estados					 |
 	+------------------------------------------------------------------------------------------------+
 
 
@@ -109,16 +109,16 @@ SnmpServer.hpp		- [header files]: Servidor SNMP
 
 ========[Esquema de coneción]===============================
 
-	+----------------+ 									+-------------------------------+ 
-	|       IN       |									|     	 RELE  	 	   	|
-	+----------------+ 									+-------------------------------+
-		|	|							 		NO		COM		NC
-		|	|									|		| 		|
-		|	|	                    +----------+ 			    	|	    	|
-		+-------|---------------------------| BOMBILLA |--------------------------------+		|
-		|	|		            +----------+ 						|
-		|	|											|
-		|	+---------------------------------------------------------------------------------------+					
+	+----------------+ 												+-------------------------------+ 
+	|       IN       |												|     	 RELE  	 	   			|
+	+----------------+ 												+-------------------------------+
+		|	|							 										NO		COM		NC
+		|	|																	|		| 		|
+		|	|	                    		+----------+ 			    				|    	|
+		+-----------------------------------| BOMBILLA |--------------------------------+		|
+		|	|		            			+----------+ 										|
+		|	|																					|
+		|	+-----------------------------------------------------------------------------------+					
 		|	|
 		N	F	
 	+-------------+												# COM	- Punto común  
