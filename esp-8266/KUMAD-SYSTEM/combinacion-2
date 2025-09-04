@@ -155,5 +155,10 @@ void loop() {
   if (anyDown || motion) digitalWrite(ledPin, HIGH); // rojo → alerta
   else digitalWrite(ledPin, LOW); // verde → todo OK
 
+// -------------------------------------------------------------------------------------------------------------
+// # instalar libreria de ping
+// https://github.com/dancol90/ESP8266Ping
+// Sketch > Include Library > Add .ZIP Library...
+
   delay(200);
 }
