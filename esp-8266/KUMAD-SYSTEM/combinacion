@@ -9,28 +9,42 @@ const char* password = "TU_PASSWORD";
 // ===== CONFIGURACIÓN CORREO =====
 #define SMTP_HOST "smtp.gmail.com"
 #define SMTP_PORT 587
-
 #define AUTHOR_EMAIL "TU_CORREO@gmail.com"
 #define AUTHOR_PASSWORD "TU_APP_PASSWORD"
 #define RECIPIENT_EMAIL "DESTINO@gmail.com"
 
 // ===== ARRAY DE HOSTS =====
+// Más de 20–25 hosts ya empieza a ser riesgoso sin optimizar memoria ni intervalos de ping.
 struct Host {
   const char* ip;
   const char* name;
   bool isUp;
+  unsigned long lastEmailTime;
 };
 
 Host hosts[] = {
-  {"192.168.1.1", "Router", true},
-  {"192.168.1.100", "Servidor NAS", true}
+  {"192.168.1.1", "Router", true, 0},
+  {"192.168.1.100", "Servidor NAS", true, 0},
+  {"192.168.1.101", "PC Oficina", true, 0},
+  {"192.168.1.102", "Servidor Media", true, 0},
+  {"192.168.1.103", "Laptop", true, 0},
+  {"192.168.1.104", "Impresora", true, 0},
+  {"192.168.1.105", "Raspberry", true, 0},
+  {"192.168.1.106", "Smart TV", true, 0},
+  {"192.168.1.107", "CCTV", true, 0},
+  {"192.168.1.108", "Servidor Backup", true, 0},
+  {"192.168.1.109", "PC Gamer", true, 0},
+  {"192.168.1.110", "NAS 2", true, 0},
+  {"192.168.1.111", "Router Secundario", true, 0},
+  {"192.168.1.112", "Tablet", true, 0},
+  {"192.168.1.113", "Smartphone", true, 0}
 };
 const int numHosts = sizeof(hosts)/sizeof(hosts[0]);
 
 // ===== PIN DEL PIR =====
-const int pirPin = D2; // Conectado al OUT del HC-SR501 mini
-unsigned long lastMotionEmail = 0; // Para control de 10 segundos entre correos
-const unsigned long motionDelay = 10000; // 10 segundos
+const int pirPin = D2;
+unsigned long lastMotionEmail = 0;
+const unsigned long motionDelay = 10000;
 
 // ===== OBJETO SMTP =====
 SMTPSession smtp;
@@ -69,7 +83,7 @@ void sendEmail(const char* subject, const char* message) {
 void setup() {
   Serial.begin(115200);
 
-  // Cambiar MAC tipo Acer (opcional)
+  // MAC tipo Acer (opcional)
   uint8_t mac[6] = {0x00, 0x1B, 0x2F, 0xAA, 0xBB, 0xCC};
   WiFi.macAddress(mac);
 
@@ -86,43 +100,44 @@ void setup() {
 
 // ===== LOOP PRINCIPAL =====
 void loop() {
+  unsigned long currentMillis = millis();
+
   // --- MONITOREO DE HOSTS ---
   for (int i = 0; i < numHosts; i++) {
-    bool pingResult = Ping.ping(hosts[i].ip, 1); // 1 intento
+    bool pingResult = Ping.ping(hosts[i].ip, 1);
+
     if (pingResult != hosts[i].isUp) {
       hosts[i].isUp = pingResult;
 
-      char subject[64];
-      char message[128];
+      // Enviar correo si han pasado al menos 10s desde último correo por este host
+      if (currentMillis - hosts[i].lastEmailTime >= 10000) {
+        hosts[i].lastEmailTime = currentMillis;
 
-      if (pingResult) {
-        snprintf(subject, sizeof(subject), "✅ %s UP", hosts[i].name);
-        snprintf(message, sizeof(message), "%s (%s) está nuevamente UP.", hosts[i].name, hosts[i].ip);
+        char subject[64];
+        char message[128];
+
+        if (pingResult) {
+          snprintf(subject, sizeof(subject), "✅ %s UP", hosts[i].name);
+          snprintf(message, sizeof(message), "%s (%s) está nuevamente UP.", hosts[i].name, hosts[i].ip);
+        } else {
+          snprintf(subject, sizeof(subject), "❌ %s DOWN", hosts[i].name);
+          snprintf(message, sizeof(message), "%s (%s) está DOWN.", hosts[i].name, hosts[i].ip);
+        }
+
         Serial.println(message);
-      } else {
-        snprintf(subject, sizeof(subject), "❌ %s DOWN", hosts[i].name);
-        snprintf(message, sizeof(message), "%s (%s) está DOWN.", hosts[i].name, hosts[i].ip);
-        Serial.println(message);
+        sendEmail(subject, message);
       }
-
-      sendEmail(subject, message);
     }
   }
 
   // --- DETECCIÓN DE MOVIMIENTO ---
   bool motion = digitalRead(pirPin) == HIGH;
-  unsigned long currentMillis = millis();
 
   if (motion && currentMillis - lastMotionEmail >= motionDelay) {
     Serial.println("¡Movimiento detectado!");
     sendEmail("🚨 Movimiento detectado", "Se ha detectado movimiento en la zona monitoreada.");
     lastMotionEmail = currentMillis;
-
-    // Espera mientras sigue detectando movimiento
-    while(digitalRead(pirPin) == HIGH){
-      delay(100);
-    }
   }
 
-  delay(500); // Pequeña pausa para rebotes
+  delay(200); // Pequeña pausa para evitar rebotes y no saturar la CPU
 }
