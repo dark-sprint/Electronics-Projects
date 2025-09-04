@@ -2,6 +2,8 @@
 #include <ESP8266Ping.h>
 #include <ESP_Mail_Client.h>
 
+bool firstBoot = true; // variable global
+
 // ===== CONFIGURACIÓN RED =====
 const char* ssid = "TU_WIFI";
 const char* password = "TU_PASSWORD";
@@ -101,6 +103,12 @@ void setup() {
 // ===== LOOP PRINCIPAL =====
 void loop() {
   unsigned long currentMillis = millis();
+
+  // --- PRIMER MENSAJE AL ENCENDER ---
+  if (firstBoot) {
+    sendEmail("🔔 ESP8266 Encendido", "El ESP8266 Network + Motion Watcher se ha iniciado.");
+    firstBoot = false; // Evita que se vuelva a enviar
+  }
 
   // --- PING ROTATIVO DE HOSTS ---
   if (currentMillis - lastPingTime >= pingInterval) {
