@@ -16,7 +16,6 @@ const char* password = "TU_PASSWORD";
 #define RECIPIENT_EMAIL "DESTINO@gmail.com"
 
 // ===== ARRAY DE HOSTS =====
-// hasta ~15 hosts sin riesgo de colapso
 struct Host {
   const char* ip;
   const char* name;
@@ -24,6 +23,7 @@ struct Host {
   unsigned long lastEmailTime;
 };
 
+// hasta ~15 hosts sin riesgo de colapso, máximo 20 hosts (se pueden saturar los recursos).
 Host hosts[] = {
   {"192.168.1.1", "Router", true, 0},
   {"192.168.1.100", "Servidor NAS", true, 0},
