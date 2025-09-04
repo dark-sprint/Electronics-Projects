@@ -1,7 +1,3 @@
-# Pin HC-SR501 mini	ESP8266 (NodeMCU) 
-# VCC	    3.3V
-# GND     GND
-# OUT     D2 (GPIO4)
 #include <ESP8266WiFi.h>
 #include <ESP_Mail_Client.h>
 
@@ -19,7 +15,7 @@ const char* password = "TU_PASSWORD";
 
 // ===== PIN DEL PIR =====
 const int pirPin = D2; // Conectado al OUT del HC-SR501 mini
-bool lastState = LOW;  // Estado anterior del sensor
+bool lastState = LOW;  
 
 // ===== OBJETO SMTP =====
 SMTPSession smtp;
@@ -33,7 +29,6 @@ void sendEmail(const char* subject, const char* message) {
   mail.addRecipient("Admin", RECIPIENT_EMAIL);
   mail.text.content = message;
 
-  smtp.debug(0);
   ESP_Mail_Session session;
   session.server.host_name = SMTP_HOST;
   session.server.port = SMTP_PORT;
@@ -65,7 +60,6 @@ void setup() {
 
   pinMode(pirPin, INPUT);
 
-  // Conexión Wi-Fi
   WiFi.begin(ssid, password);
   Serial.print("Conectando a WiFi");
   while (WiFi.status() != WL_CONNECTED) {
@@ -79,12 +73,20 @@ void setup() {
 void loop() {
   bool currentState = digitalRead(pirPin);
 
-  // Detecta cambio de estado
-  if (currentState == HIGH && lastState == LOW) {
+  if (currentState == HIGH) {
+    // Detecta movimiento
     Serial.println("¡Movimiento detectado!");
     sendEmail("🚨 Movimiento detectado", "Se ha detectado movimiento en la zona monitoreada.");
+    
+    // Espera 10 segundos antes de poder enviar otro correo
+    delay(10000);
+    
+    // Espera mientras sigue detectando movimiento
+    while(digitalRead(pirPin) == HIGH){
+      delay(100); // pequeña pausa para no saturar la CPU
+    }
   }
-
+  
   lastState = currentState;
-  delay(500); // Pequeña pausa para evitar rebotes
+  delay(100); // pequeña pausa para evitar rebotes
 }
