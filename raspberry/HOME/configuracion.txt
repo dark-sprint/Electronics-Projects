@@ -7,6 +7,9 @@ vim monitor.sh
 ---------------------------------------------
 chmod +x monitor.sh
 
+# configuro la terminal en bash
+apk add bash
+
 # instalo msmtp, es ligero, minimalista y solo envía correo saliente (sirve para enviar mensajes puntuales no es un servidor de correo como postfix)
 apk add msmtp
 
