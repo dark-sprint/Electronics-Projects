@@ -1,0 +1,56 @@
+# creo carpeta scripts
+mkdir -p /aptelliot
+cd /aptelliot
+vim monitor.sh
+---------------------------------------------
+  # pegar monitor.sh de esta carpeta
+---------------------------------------------
+chmod +x monitor.sh
+
+# instalo msmtp, es ligero, minimalista y solo envía correo saliente (sirve para enviar mensajes puntuales no es un servidor de correo como postfix)
+apk add msmtp
+
+# compruebo permisos
+#chmod 600 /etc/msmtprc
+
+# configuro msmtprc con Gmail
+vim /etc/msmtprc
+---------------------------------------------
+defaults
+auth           on
+tls            on
+tls_trust_file /etc/ssl/certs/ca-certificates.crt
+logfile        ~/.msmtp.log
+
+account        gmail
+host           smtp.gmail.com
+port           587
+from           tuemail@gmail.com
+user           tuemail@gmail.com
+password       TU_PASSWORD_APP
+account default : gmail  
+---------------------------------------------
+
+# creo un servicio
+vim /etc/systemd/system/monitor.service
+---------------------------------------------
+[Unit]
+Description=Monitor de IPs y envío de alertas por correo
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/aptelliot/monitor.sh
+Restart=always
+RestartSec=60    # Ejecuta el script cada 60 segundos
+User=root        # O usuario con permisos para msmtp
+Environment=MSMTP_CONFIG=/etc/msmtprc
+
+[Install]
+WantedBy=multi-user.target
+---------------------------------------------
+
+# activo el servicio
+systemctl daemon-reload
+systemctl enable monitor.service
+systemctl start monitor.service
