@@ -24,7 +24,7 @@ send_email() {
     local name=$2
     local state=$3
     echo "El dispositivo '$name' (IP: $ip) cambió a estado: $state" | \
-    msmtp --from="$FROM_EMAIL" -t "$TO_EMAIL" -s "$SUBJECT"
+    msmtp --file=/etc/msmtprc --from="$FROM_EMAIL" -t "$TO_EMAIL" -s "$SUBJECT"
 }
 
 # Comprobar cada IP
