@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Configuración: IP -> Nombre del dispositivo
 declare -A IP_MAP
