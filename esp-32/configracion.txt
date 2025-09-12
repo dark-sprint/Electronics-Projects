@@ -5,3 +5,5 @@ esp+ethernet = ESP32-WROOM-32 WT32-ETH01 Puerto serie integrado a Ethernet WiFi 
 libreria = https://github.com/marian-craciunescu/ESP32Ping
   + GitHub > Download ZIP
   + Sketch > Incluir librería > Añadir librería .ZIP
+
+Arduino IDE → Archivo > Preferencias = https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
