@@ -13,7 +13,7 @@ const char* htmlPage = R"rawliteral(
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>🤖 Generador de tareas</title>
+  <title>Generador de tareas</title>
   <style>
     body { font-family: monospace; background-color:#ffee00; padding: 1em; }
     #terminal { white-space: pre-wrap; margin-bottom: 1em; }
@@ -22,6 +22,7 @@ const char* htmlPage = R"rawliteral(
     li { margin: 5px 0; padding: 5px; background: #fff6; border: 1px solid #333; display: flex; align-items: center; }
     li button { font-weight: bold; margin-left: auto; color: #ff00f7; border: none; padding: 5px; cursor:pointer; background-color:transparent; }
   </style>
+  <link rel="icon" href="https://raw.githubusercontent.com/aptelliot/Electronics-Projects/main/esp-8266/%F0%9F%A6%98%20GENERADOR-DE-TAREAS-CON-MEMORIA-FLASH-INTERNA/15521827.png" type="image/png">
 </head>
 <body>
   <pre id="terminal"></pre>
@@ -266,3 +267,4 @@ void setup() {
 void loop() {
   server.handleClient();
 }
+
