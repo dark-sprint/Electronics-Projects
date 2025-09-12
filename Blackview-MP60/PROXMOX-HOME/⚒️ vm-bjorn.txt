@@ -1,0 +1,1 @@
+# Su propósito es realizar escaneos de red, evaluaciones de vulnerabilidades y ataques automatizados, todo desde un dispositivo compacto y portátil.

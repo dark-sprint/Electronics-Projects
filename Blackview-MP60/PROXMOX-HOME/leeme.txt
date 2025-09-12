@@ -1,0 +1,7 @@
+## cada uno de los servidores están pensados después de la instalación de PROXMOX y de ejecutar el script inicial de script-00.sh y el script de creación de un usuario admin por cada contenedor:
+
+# ejecuto script de instalación inicial
+bash -c "$(wget https://raw.githubusercontent.com/aptelliot/scripts/refs/heads/main/script-00.sh -qO -)"
+
+# ejecuto script de creación de usuario admin
+bash -c "$(wget https://raw.githubusercontent.com/aptelliot/scripts/refs/heads/main/user-UID0.sh -qO -)"

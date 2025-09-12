@@ -1,0 +1,275 @@
+# 🧠 Este servidor se utiliza como ejecutor de diferentes scripts a bajo nivel...
+
+#=========================================================================================================================
+#=========================================================================================================================
+[🪖📩 AUTOSCRIPT]::
+# en este contenedor corren varios servicios de las instalaciones de abajo:
+systemctl status monitor
+systemctl status monitor
+
+#=========================================================================================================================
+[🪖📩 (OPCIONAL) INSTALAR ANTIVIRUS]::
+# paquetes de Linux de utilización rápida y práctica (escaneres):
+# 💯 realizo la instalación de un antivirus para automatizar el escaner de archivos corruptos en el servidor
+
+# instalación antivirus Linux:
+## 👹 clamav::
+apt install clamav
+apt install clamav-freshclam
+# busco actualizaciones en la base de datos
+sudo freshclam
+# escaneo manualmente el sistema
+# clamscan -[parámetros] [ruta de carpeta]
+# sudo clamscan -r /
+sudo clamscan -r /home
+
+# 👹 formas de uso con clamav:
+# guardo un registro de archivos infectados
+sudo clamscan -l /ruta/al/archivo.txt -r /ruta/al/directorio
+
+# mandar archivo a cuarentena (para no causar daño al servidor):
+# sudo clamscan --move=/path/to/quarantine -r /ruta/al/directorio
+sudo clamscan --move=/path/to/quarantine -r /ruta/al/directorio -l /ruta/al/archivo.txt
+
+# borrar archivos maliciosos:
+# sudo clamscan --remove -r /ruta/al/directorio
+sudo clamscan --remove -r /ruta/al/directorio -l /ruta/al/archivo.txt
+
+# actualizar base de datos 
+sudo freshclam
+
+# lo que puedo hacer es un cron y un alias para que automatice el análisis de virus. 
+# 🆗
+
+#=========================================================================================================================
+[🪖📩 CONFIGURACIÓN INICIAL DE POSTFIX CON GMAIL PARA EL RESTO DE SCRIPTS]::
+vim /etc/postfix/main.cf
+--------------------------------------------------------------------------
+# Nombre del host y dominios locales
+myhostname = autoscript.local
+myorigin = /etc/mailname
+mydestination = localhost
+
+# Relay a Gmail
+relayhost = [smtp.gmail.com]:587
+
+# TLS
+smtp_use_tls = yes
+smtp_tls_security_level = encrypt
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+
+# Autenticación SASL
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
+smtp_sasl_mechanism_filter = plain, login
+
+# Forzar IPv4 (opcional, evita errores de conexión IPv6)
+smtp_address_preference = ipv4
+--------------------------------------------------------------------------
+
+vim /etc/postfix/sasl_passwd
+--------------------------------------------------------------------------
+[smtp.gmail.com]:587 de@gmail.com:<contraseña-de-aplicación>
+--------------------------------------------------------------------------
+
+# Compilar y proteger credenciales
+postmap /etc/postfix/sasl_passwd
+chmod 600 /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.db
+
+# instalar paquete
+apt install libsasl2-modules -y
+
+# Reiniciar Postfix
+systemctl restart postfix
+systemctl enable postfix
+
+# prueba local
+echo "Prueba de Gmail vía Postfix" | sendmail -v -f de@gmail.com a@gmail.com -t
+
+
+#=========================================================================================================================
+#=========================================================================================================================
+[🪖📩 PROYECTO MONITOR]::
+
+# script
+cd /aptelliot
+vim monitor.sh
+--------------------------------------------------------------------------
+#!/bin/bash
+
+### === CONFIGURACIÓN DE IPs === ###
+declare -A IP_MAP=(
+    ["192.168.1.1"]="ROUTER-DIGI"
+    ["192.168.1.75"]="PROXMOX"
+    ["192.168.1.129"]="TV-SALÓN"
+    ["192.168.1.130"]="PC-MILITAR-WIFI"
+    ["192.168.1.131"]="PORTATIL-AIR"
+    ["192.168.1.134"]="ANDROID"
+    ["192.168.1.136"]="TV-HABITACIÓN"
+    ["192.168.1.137"]="IPHONE"
+)
+
+STATUS_FILE="/var/lib/aptelliot/ip_status.txt"
+LOG_FILE="/var/log/monitor.log"
+
+### === CONFIGURACIÓN DEL CORREO === ###
+GMAIL_USER="de@gmail.com"
+DESTINO="a@gmail.com"
+ASUNTO="🪖📩  Cambio de estado de IP"
+REMITENTE="no-reply@autoscript.local"
+
+# Inicializar archivos
+mkdir -p /var/lib/aptelliot
+touch "$STATUS_FILE" "$LOG_FILE"
+
+### === FUNCIONES === ###
+
+send_email() {
+    local ip=$1
+    local name=$2
+    local state=$3
+
+    (
+        echo "Subject: $ASUNTO"
+        echo "From: $REMITENTE"
+        echo "To: $DESTINO"
+        echo "Content-Type: text/plain; charset=utf-8"
+        echo
+        echo "El dispositivo '$name' (IP: $ip) cambió a estado: $state"
+    ) | sendmail -v -f "$REMITENTE" -t >> "$LOG_FILE" 2>&1
+
+    echo "$(date '+%F %T') - Intento de envío: $name ($ip) -> $state" >> "$LOG_FILE"
+}
+
+### === COMPROBACIÓN DE IPs === ###
+for ip in "${!IP_MAP[@]}"; do
+    if ping -c 1 -W 1 "$ip" &>/dev/null; then
+        current_status="UP"
+    else
+        current_status="DOWN"
+    fi
+
+    previous_status=$(grep "^$ip " "$STATUS_FILE" | awk '{print $2}')
+
+    echo "$(date '+%F %T') - Ping $ip (${IP_MAP[$ip]}): $current_status" >> "$LOG_FILE"
+
+    # Enviar correo si cambia el estado o si es la primera vez (previous_status vacío)
+    if [ "$previous_status" != "$current_status" ] || [ -z "$previous_status" ]; then
+        send_email "$ip" "${IP_MAP[$ip]}" "$current_status"
+
+        # Actualizar estado en el archivo
+        tmp=$(mktemp)
+        grep -v "^$ip " "$STATUS_FILE" > "$tmp"
+        echo "$ip $current_status" >> "$tmp"
+        mv "$tmp" "$STATUS_FILE"
+
+        echo "$(date '+%F %T') - Estado actualizado: $ip -> $current_status" >> "$LOG_FILE"
+    fi
+done
+--------------------------------------------------------------------------
+
+chmod +x monitor.sh
+
+# creo un servicio
+vim /etc/systemd/system/monitor.service
+---------------------------------------------
+[Unit]
+Description=Monitor de IPs y envío de alertas por correo
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/aptelliot/monitor.sh
+Restart=always
+
+# Ejecuta el script cada 60 segundos tras fallo/restart
+RestartSec=60
+
+# Ejecutar como root (puedes cambiarlo si tienes un usuario dedicado)
+User=root
+
+#Environment=MSMTP_CONFIG=/etc/msmtprc
+
+[Install]
+WantedBy=multi-user.target
+---------------------------------------------
+
+# activo el servicio
+systemctl daemon-reload
+systemctl enable monitor.service
+systemctl start monitor.service
+systemctl status monitor.service
+
+
+#=========================================================================================================================
+#=========================================================================================================================
+[🪖📩 PROYECTO MENSAJERO PROGRAMADO]::
+# Documentación oficial kismet :             https://www.kismetwireless.net/docs/readme/installing/linux/
+# documentación oficial clamav :             https://docs.clamav.net/
+
+# -
+[🪖📩 MENSAJES PROGRAMADOS]::
+# 🧠 enviará cad día un mensaje programado a la misma hora (siempre que lo haya), ordenando los archivos a enviar por orden.
+# 🧠 una vez enviado, se clasifica el mensaje dentro de la carpeta /enviados de la misma ruta y aunque permanezca en el servidor no se volverá a mandar dicho mensaje.
+# 🧠 al mover el mensaje a la carpeta enviados le cambia el nombre por la fecha y luego su nombree original para que no sobreescriban. Ej: 20250619_082815_nombre.txt
+
+# creo una carpeta con los mensajes
+mkdir /aptelliot/mensajes
+
+# instalo postfix
+apt install postfix
+    - web
+
+# entro en carpeta de scripts
+cd /aptelliot
+
+# 👍📮 creo el script en el caso que el correo remitente sea de dominio
+vim enviar-mensaje.sh
+--------------------------------------------------------------------------
+#!/bin/bash
+CARPETA="/aptelliot/mensajes"
+DESTINO="de@gmail.com"                  # puedes poner varios separados por coma
+DESTINO_OCULTO="bcc@gmail.com"          # puedes poner varios separados por coma
+ASUNTO="Nuevo mensaje"
+REMITENTE="a@gmail.com"
+DESTINO_ENVIADOS="$CARPETA/enviados"
+
+# Crear carpeta de enviados si no existe
+mkdir -p "$DESTINO_ENVIADOS"
+
+# Buscar el primer archivo por orden
+archivo=$(ls "$CARPETA"/*.txt 2>/dev/null | sort | head -n 1)
+
+if [ -n "$archivo" ]; then
+    echo "Enviando: $archivo a $DESTINO (BCC: $DESTINO_OCULTO)"
+
+    (
+        echo "Subject: $ASUNTO"
+        echo "From: $REMITENTE"
+        echo "To: $DESTINO"
+        echo "Bcc: $DESTINO_OCULTO"
+        echo "Content-Type: text/plain; charset=utf-8"
+        echo
+        cat "$archivo"
+    ) | sendmail -f "$REMITENTE" -t
+
+    if [ $? -eq 0 ]; then
+        echo "Correo enviado exitosamente."
+        nombre=$(basename "$archivo")
+        timestamp=$(date +%Y%m%d_%H%M%S)
+        mv "$archivo" "$DESTINO_ENVIADOS/${timestamp}_$nombre"
+    else
+        echo "Error al enviar el correo."
+    fi
+else
+    echo "No hay mensajes pendientes por enviar."
+fi
+--------------------------------------------------------------------------
+
+crontab -e
+--------------------------------------------------------------------------
+# cada día a las 4:00
+0 4 * * * /aptelliot/enviar-mensaje.sh
+--------------------------------------------------------------------------
+

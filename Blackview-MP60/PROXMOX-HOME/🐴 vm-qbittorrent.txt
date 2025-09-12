@@ -1,0 +1,67 @@
+# actualizo
+sudo apt update && sudo apt upgrade -y
+
+# instalar dependencias necesarias
+sudo apt install qbittorrent-nox
+
+# lo ejecuto
+qbittorrent-nox
+
+# servidor web
+http://<ip-del-servidor>:8080
+-  Usuario: admin
+-  Contraseña: adminadmin
+
+# creo un usuario
+sudo adduser --disabled-password --gecos "" qbittorrent
+
+# creo la carpeta de Descargas
+sudo mkdir -p /Descargas
+sudo chown qbittorrent:qbittorrent /Descargas
+
+# ejecuto la configuración para generar el despliegue
+sudo -u qbittorrent qbittorrent-nox
+
+# creo un servicio para habilitarlo de manera sencilla en segundo plano 
+vim /etc/systemd/system/qbittorrent-nox.service
+----------------------------------------------------------------
+[Unit]
+Description=qBittorrent-nox service
+After=network.target
+
+[Service]
+User=qbittorrent
+ExecStart=/usr/bin/qbittorrent-nox
+Restart=on-failure
+RestartSec=5
+Nice=10
+UMask=002
+
+[Install]
+WantedBy=multi-user.target
+----------------------------------------------------------------
+
+# recargar systemd y habilitar el servicio
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+
+# Iniciar el servicio
+sudo systemctl start qbittorrent-nox
+sudo systemctl enable qbittorrent-nox
+sudo systemctl status qbittorrent-nox
+
+# al crear los torrent tengo que indicarles la carpeta de descarga en /Descargas
+# configuración por interface
+# servidor web
+http://<ip-del-servidor>:8080
+-  Usuario: admin
+-  Contraseña: adminadmin
+
+# asocio la carpeta de descargas
+Tools > Options > Default save path: /Descargas
+
+
+==========================================================================================
+# sitios donde descargar torrents
+https://www1.subtorrents.zip/
+https://www.justwatch.com/in
