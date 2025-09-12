@@ -1,0 +1,7 @@
+# Configuración: 
+
+esp+ethernet = ESP32-WROOM-32 WT32-ETH01 Puerto serie integrado a Ethernet WiFi BT Módulo de placa de desarrollo inalámbrico
+
+libreria = https://github.com/marian-craciunescu/ESP32Ping
+  + GitHub > Download ZIP
+  + Sketch > Incluir librería > Añadir librería .ZIP
