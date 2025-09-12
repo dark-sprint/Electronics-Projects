@@ -1,14 +1,8 @@
-#include <WiFi.h>               // ESP32
+#include <ETH.h>                  // Ethernet para ESP32
 #include <ESP_Mail_Client.h>
-#include <ESP32Ping.h>          // Para ESP32, en lugar de ESP8266Ping.h
+#include <ESP32Ping.h>
 
 bool firstBoot = true;
-
-// =====================
-// CONFIGURACIÓN RED
-// =====================
-const char* ssid = "TU_WIFI";
-const char* password = "TU_PASSWORD";
 
 // =====================
 // CONFIGURACIÓN CORREO
@@ -39,7 +33,7 @@ Host hosts[] = {
 const int numHosts = sizeof(hosts) / sizeof(hosts[0]);
 
 // ===== PIN DEL PIR =====
-const int pirPin = 2;  // D2 en ESP8266 → GPIO2 en ESP32
+const int pirPin = 2;  // GPIO2
 unsigned long lastMotionEmail = 0;
 const unsigned long motionDelay = 10000;
 
@@ -86,13 +80,16 @@ void setup() {
   Serial.begin(115200);
   pinMode(pirPin, INPUT);
 
-  WiFi.begin(ssid, password);
-  Serial.print("Conectando a WiFi");
-  while (WiFi.status() != WL_CONNECTED) {
+  // Inicializar Ethernet
+  ETH.begin();  
+  Serial.print("Conectando a Ethernet...");
+  while (ETH.linkStatus() == 0) {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("\nWiFi conectado!");
+  Serial.println("\nEthernet conectado!");
+  Serial.print("IP asignada: ");
+  Serial.println(ETH.localIP());
 }
 
 // ===== LOOP PRINCIPAL =====
@@ -112,7 +109,7 @@ void loop() {
     Host &h = hosts[currentHost];
     bool pingResult = Ping.ping(h.ip, 3); // 3 intentos por host
 
-    static int failCount[20] = {0}; // soporte hasta 20 hosts
+    static int failCount[20] = {0};
     static int okCount[20] = {0};
 
     if (pingResult) {
@@ -123,7 +120,6 @@ void loop() {
       okCount[currentHost] = 0;
     }
 
-    // Cambia a DOWN si falla 3 veces seguidas
     if (failCount[currentHost] >= 3 && h.isUp) {
       h.isUp = false;
       String subject = "❌ " + String(h.name) + " DOWN";
@@ -132,7 +128,6 @@ void loop() {
       sendEmail(subject.c_str(), message.c_str());
     }
 
-    // Cambia a UP si responde 2 veces seguidas
     if (okCount[currentHost] >= 2 && !h.isUp) {
       h.isUp = true;
       String subject = "✅ " + String(h.name) + " UP";
@@ -141,7 +136,6 @@ void loop() {
       sendEmail(subject.c_str(), message.c_str());
     }
 
-    // Pasar al siguiente host
     currentHost++;
     if (currentHost >= numHosts) currentHost = 0;
   }
