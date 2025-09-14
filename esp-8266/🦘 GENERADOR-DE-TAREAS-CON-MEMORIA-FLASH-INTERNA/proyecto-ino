@@ -21,8 +21,9 @@ const char* htmlPage = R"rawliteral(
     ul { list-style-type: none; padding: 0; }
     li { margin: 5px 0; padding: 5px; background: #fff6; border: 1px solid #333; display: flex; align-items: center; }
     li button { font-weight: bold; margin-left: auto; color: black; border: none; padding: 5px; cursor:pointer; background-color:transparent; }
+    .badge { background-color: black; font-size: 0.7em; padding: 2px 6px; border-radius: 12px;}
   </style>
-  <link rel="icon" href="https://raw.githubusercontent.com/aptelliot/Electronics-Projects/main/esp-8266/%F0%9F%A6%98%20GENERADOR-DE-TAREAS-CON-MEMORIA-FLASH-INTERNA/15521827.png" type="image/png">
+  <link rel="icon" href="https://raw.githubusercontent.com/aptelliot/Electronics-Projects/main/esp-8266/%F0%9F%A6%98%20GENERADOR-DE-TAREAS-CON-MEMORIA-FLASH-INTERNA/3258437329.png" type="image/png">
 </head>
 <body>
   <pre id="terminal"></pre>
@@ -84,6 +85,7 @@ const char* htmlPage = R"rawliteral(
             const li = document.createElement('li');
             li.innerHTML = `
               <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${i}, this.checked)">
+              <span class="badge">${task.date || ''}</span>
               <span style="margin-left:8px; text-decoration:${task.done ? 'line-through' : 'none'}">${task.text}</span>
               <button onclick="removeTask(${i})">Borrar</button>
             `;
@@ -113,6 +115,19 @@ const char* htmlPage = R"rawliteral(
 </body>
 </html>
 )rawliteral";
+
+// ================= FUNCIONES BACKEND =================
+
+// Función para obtener fecha/hora con NTP
+String getDateTime() {
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    return "SinHora";
+  }
+  char buffer[20];
+  strftime(buffer, sizeof(buffer), "%d/%m/%Y %H:%M", &timeinfo);
+  return String(buffer);
+}
 
 // Página principal
 void handleRoot() {
@@ -146,7 +161,7 @@ void handleAddTask() {
 
   String newTask = server.arg("task");
 
-  DynamicJsonDocument doc(2048);
+  DynamicJsonDocument doc(4096);
   JsonArray arr;
 
   if (LittleFS.exists("/tasks.json")) {
@@ -159,19 +174,21 @@ void handleAddTask() {
   }
 
   // Crear nuevo array para invertir el orden
-  DynamicJsonDocument newDoc(2048);
+  DynamicJsonDocument newDoc(4096);
   JsonArray newArr = newDoc.to<JsonArray>();
 
   // Insertar la nueva tarea al principio
   JsonObject obj = newArr.createNestedObject();
   obj["text"] = newTask;
   obj["done"] = false;
+  obj["date"] = getDateTime();   // Fecha y hora reales
 
   // Copiar las tareas existentes después
   for (JsonObject oldObj : arr) {
     JsonObject copy = newArr.createNestedObject();
     copy["text"] = oldObj["text"];
     copy["done"] = oldObj["done"];
+    copy["date"] = oldObj["date"]; // conservar fechas previas
   }
 
   // Guardar en el archivo
@@ -194,7 +211,7 @@ void handleRemoveTask() {
 
   int index = server.arg("index").toInt();
 
-  DynamicJsonDocument doc(2048);
+  DynamicJsonDocument doc(4096);
   File file = LittleFS.open("/tasks.json", "r");
   if (!file) {
     server.send(404, "text/plain", "Archivo no encontrado");
@@ -225,7 +242,7 @@ void handleToggleTask() {
   int index = server.arg("index").toInt();
   bool done = server.arg("done") == "true";
 
-  DynamicJsonDocument doc(2048);
+  DynamicJsonDocument doc(4096);
   File file = LittleFS.open("/tasks.json", "r");
   if (!file) {
     server.send(404, "text/plain", "Archivo no encontrado");
@@ -273,6 +290,9 @@ void setup() {
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) delay(1000);
   Serial.println(WiFi.localIP());
+
+  // Configurar NTP (cambiar zona horaria según tu país)
+  configTime(+2 * 3600, 0, "pool.ntp.org", "time.nist.gov");
 
   digitalWrite(LED_BUILTIN, LOW);   // Enciende LED mientras conecta
   delay(200);
