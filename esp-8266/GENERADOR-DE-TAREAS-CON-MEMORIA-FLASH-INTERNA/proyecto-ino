@@ -19,11 +19,11 @@ const char* htmlPage = R"rawliteral(
     #terminal { white-space: pre-wrap; margin-bottom: 1em; }
     input, button { font-family: Arial; padding: 0.5em; margin-right: 0.5em; }
     ul { list-style-type: none; padding: 0; }
-    li { margin: 5px 0; padding: 5px; background: #fff6; border: 1px solid #333; display: flex; align-items: center; }
+    li { margin: 5px 0; padding: 5px; background: #fff6; border: 1px solid #333; display: flex; align-items: center; display: flex; align-items: center; }
     li button { font-weight: bold; margin-left: auto; color: black; border: none; padding: 5px; cursor:pointer; background-color:transparent; }
     .badge { background-color: black; font-size: 0.7em; padding: 2px 6px; border-radius: 12px;}
   </style>
-  <link rel="icon" href="https://raw.githubusercontent.com/aptelliot/Electronics-Projects/main/esp-8266/%F0%9F%A6%98%20GENERADOR-DE-TAREAS-CON-MEMORIA-FLASH-INTERNA/3258437329.png" type="image/png">
+  <link rel="icon" href="https://raw.githubusercontent.com/aptelliot/Electronics-Projects/main/bandera.png" type="image/png">
 </head>
 <body>
   <pre id="terminal"></pre>
@@ -85,8 +85,11 @@ const char* htmlPage = R"rawliteral(
             const li = document.createElement('li');
             li.innerHTML = `
               <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${i}, this.checked)">
-              <span class="badge">${task.date || ''}</span>
-              <span style="margin-left:8px; text-decoration:${task.done ? 'line-through' : 'none'}">${task.text}</span>
+              <div style="margin-left:8px; flex-grow:1;">
+                <span class="badge">${task.date || ''}</span>
+                <br>
+                <span style="text-decoration:${task.done ? 'line-through' : 'none'}">${task.text}</span>
+              </div>
               <button onclick="removeTask(${i})">Borrar</button>
             `;
             list.appendChild(li);
