@@ -13,24 +13,39 @@ const char* htmlPage = R"rawliteral(
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Generador de tareas</title>
+  <title>Servidor de notas militar</title>
   <style>
-    body { font-family: monospace; background-color:#ffee00; padding: 1em; }
+    body { font-family: monospace; background-color:#37451d; padding: 1em; color:white }
     #terminal { white-space: pre-wrap; margin-bottom: 1em; }
     input, button { font-family: Arial; padding: 0.5em; margin-right: 0.5em; }
     ul { list-style-type: none; padding: 0; }
     li { margin: 5px 0; padding: 5px; background: #fff6; border: 1px solid #333; display: flex; align-items: center; }
-    li button { font-weight: bold; margin-left: auto; color: #ff00f7; border: none; padding: 5px; cursor:pointer; background-color:transparent; }
+    li button { font-weight: bold; margin-left: auto; color: black; border: none; padding: 5px; cursor:pointer; background-color:transparent; }
   </style>
   <link rel="icon" href="https://raw.githubusercontent.com/aptelliot/Electronics-Projects/main/esp-8266/%F0%9F%A6%98%20GENERADOR-DE-TAREAS-CON-MEMORIA-FLASH-INTERNA/15521827.png" type="image/png">
 </head>
 <body>
   <pre id="terminal"></pre>
-  <input type="text" id="taskInput" placeholder="Nueva tarea" style="width:500px">
+  <!-- Input de búsqueda -->
+  <input type="text" id="searchInput" placeholder="Buscar nota..." style="width:380px" oninput="filterTasks()">
+  <br><br>
+  <!-- Input de nueva nota -->
+  <input type="text" id="taskInput" placeholder="Nueva nota" style="width:300px">
   <button onclick="addTask()">Agregar</button>
   <ul id="taskList" style="width: 60%;"></ul>
 
   <script>
+    function filterTasks() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const list = document.getElementById('taskList');
+      const items = list.getElementsByTagName('li');
+
+      for (let item of items) {
+        const text = item.innerText.toLowerCase();
+        item.style.display = text.includes(query) ? '' : 'none';
+      }
+    }
+
     async function showTerminalInfo() {
       const res = await fetch('/info');
       const data = await res.json();
@@ -38,7 +53,7 @@ const char* htmlPage = R"rawliteral(
 
       // Determinar color según Flash libre
       const flashFreeKB = data.flash_free / 1024;
-      const flashColor = flashFreeKB <= 100 ? 'red' : 'green';
+      const flashColor = flashFreeKB <= 300 ? 'red' : 'yellow';
 
       const lines = [
         `Conectando a WiFi...`,
@@ -122,7 +137,7 @@ void handleGetTasks() {
   server.send(200, "application/json", content);
 }
 
-// Agrega tarea
+// Agrega tarea (al inicio de la lista)
 void handleAddTask() {
   if (!server.hasArg("task")) {
     server.send(400, "text/plain", "Falta 'task'");
@@ -143,13 +158,26 @@ void handleAddTask() {
     arr = doc.to<JsonArray>();
   }
 
-  JsonObject obj = arr.createNestedObject();
+  // Crear nuevo array para invertir el orden
+  DynamicJsonDocument newDoc(2048);
+  JsonArray newArr = newDoc.to<JsonArray>();
+
+  // Insertar la nueva tarea al principio
+  JsonObject obj = newArr.createNestedObject();
   obj["text"] = newTask;
   obj["done"] = false;
 
+  // Copiar las tareas existentes después
+  for (JsonObject oldObj : arr) {
+    JsonObject copy = newArr.createNestedObject();
+    copy["text"] = oldObj["text"];
+    copy["done"] = oldObj["done"];
+  }
+
+  // Guardar en el archivo
   File file = LittleFS.open("/tasks.json", "w");
   if (file) {
-    serializeJson(doc, file);
+    serializeJson(newDoc, file);
     file.close();
     server.send(200, "text/plain", "OK");
   } else {
@@ -267,4 +295,3 @@ void setup() {
 void loop() {
   server.handleClient();
 }
-
