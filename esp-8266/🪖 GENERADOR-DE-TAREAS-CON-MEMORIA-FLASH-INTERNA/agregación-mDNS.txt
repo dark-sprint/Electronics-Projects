@@ -1,0 +1,21 @@
+## agrego mDNS para que me dé un dominio en vez de tener que adivinar la ip
+#include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
+
+const char* ssid = "TuSSID";
+const char* password = "TuPassword";
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) delay(500);
+
+  if (MDNS.begin("esp8266")) {  // Nombre local: esp8266.local
+    Serial.println("mDNS iniciado");
+  }
+}
+
+void loop() {
+  MDNS.update();  // Mantiene el anuncio activo
+}
