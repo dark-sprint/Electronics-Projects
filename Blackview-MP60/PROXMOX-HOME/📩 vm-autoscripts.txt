@@ -66,6 +66,7 @@ smtp_sasl_mechanism_filter = plain, login
 
 # Forzar IPv4 (opcional, evita errores de conexión IPv6)
 smtp_address_preference = ipv4
+inet_protocols = ipv4
 --------------------------------------------------------------------------
 
 vim /etc/postfix/sasl_passwd
@@ -80,13 +81,16 @@ chmod 600 /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.db
 # instalar paquete
 apt install libsasl2-modules -y
 
+# sirve para convertir el archivo de texto plano /etc/postfix/sasl_passwd en una base de datos cifrada tipo hash que Postfix sí puede usar.
+postmap /etc/postfix/sasl_passwd
+
 # Reiniciar Postfix
 systemctl restart postfix
 systemctl enable postfix
 
 # prueba local
 echo "Prueba de Gmail vía Postfix" | sendmail -v -f de@gmail.com a@gmail.com -t
-
+tail -5 /var/log/mail.log
 
 #=========================================================================================================================
 #=========================================================================================================================
