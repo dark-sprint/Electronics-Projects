@@ -120,7 +120,7 @@ LOG_FILE="/var/log/monitor.log"
 ### === CONFIGURACIÓN DEL CORREO === ###
 GMAIL_USER="de@gmail.com"
 DESTINO="a@gmail.com"
-ASUNTO="🪖📩  Cambio de estado de IP"
+ASUNTO="🤖📩  Cambio de estado de IP"
 REMITENTE="no-reply@autoscript.local"
 
 # Inicializar archivos
